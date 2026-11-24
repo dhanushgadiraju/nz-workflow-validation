@@ -132,8 +132,6 @@ nz_benchmark_summary_climate_extended.csv
 
 GPU execution reduced runtime significantly compared with CPU execution.
 
-The GPU + NVMe workflow provided the fastest submission execution due to local NVMe staging and reduced filesystem overhead.
-
 ---
 
 ## Experimental Climate Diagnostics
