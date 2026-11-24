@@ -1,238 +1,223 @@
-NZ CORDEX ML-Bench Workflow Validation on Setonix
-Overview
+# NZ CORDEX ML-Bench Workflow Validation and Climate Diagnostics Extension
 
-This repository documents the successful reproduction and validation of the New Zealand (NZ) CORDEX ML-Bench workflow on the Pawsey Setonix supercomputer.
+## Overview
 
-The objective of this work was to independently execute the benchmark workflow, verify reproducibility, identify environment and dependency issues, and validate all supported execution pathways. The workflow was successfully executed across CPU, GPU, and GPU+NVMe configurations, producing all expected benchmark outputs and evaluation results.
+This repository documents my independent reproduction and validation of the New Zealand (NZ) CORDEX ML-Bench workflow on the Pawsey Setonix supercomputer.
 
-System Environment
-HPC Platform
+The original NZ benchmark workflow was developed by Jincy Jis Kanichai and Omer Mughal. This work focuses on:
 
-Pawsey Setonix Supercomputer
+- Reproducing the workflow in an independent environment.
+- Validating CPU, GPU and GPU+NVMe execution paths.
+- Identifying reproducibility issues.
+- Exploring additional climate diagnostics available within the benchmark framework.
 
-Python Environment
+---
 
-Environment Name:
+## Validation Objectives
 
-Shell
-cordex_myenv
+The objectives of this work were to:
 
-Environment Location:
+- Understand and reproduce the existing NZ benchmark workflow.
+- Validate workflow execution in an independent user environment.
+- Verify training, submission and evaluation outputs.
+- Identify workflow dependencies and reproducibility challenges.
+- Explore additional climate-focused evaluation metrics.
 
-Shell
+---
+
+## Environment
+
+### HPC System
+
+Pawsey Supercomputing Centre – Setonix
+
+### Python Environment
+
+```text
 /software/projects/y98/dgadiraju/environments/cordex_myenv
-Working Directory
-Shell
+```
+
+### Working Directory
+
+```text
 /scratch/y98/dgadiraju/CORDEX_TESTING
-Workflow Architecture
-Plain Text
-Input Climate Data
-│
-▼
-Training
-│
-▼
-Model Generation
-│
-▼
-Submission Generation
-│
-▼
-Prediction Outputs
-│
-▼
-Submission Package
-│
-▼
-Evaluation
-│
-▼
-Benchmark Summary Report
-Validation Results
-CPU Training
+```
 
-Command:
+---
 
-Shell
-sbatch train_nz.slurm
+## Workflow Components
 
-Status: PASS
+### Training
 
-Job ID:
+Scripts:
 
-Plain Text
-53341663
-GPU Training
+```text
+training.py
+train_nz.slurm
+train_nz_gpu.slurm
+```
 
-Command:
+Generated outputs:
 
-Shell
-sbatch train_nz_gpu.slurm
-
-Status: PASS
-
-Job ID:
-
-Plain Text
-53346648
-CPU Submission
-
-Command:
-
-Shell
-sbatch submission_nz.slurm
-
-Status: PASS
-
-Job ID:
-
-Plain Text
-53342353
-GPU Submission
-
-Command:
-
-Shell
-sbatch submission_nz_gpu.slurm
-
-Status: PASS
-
-Job ID:
-
-Plain Text
-53346904
-GPU + NVMe Submission
-
-Command:
-
-Shell
-sbatch submission_nz_gpu_nvme.slurm
-
-Status: PASS
-
-Job ID:
-
-Plain Text
-53348535
-Evaluation
-
-Command:
-
-Shell
-python evaluate_nz.py
-
-Status: PASS
-
-Generated Output:
-
-Plain Text
-nz_benchmark_summary.csv
-Outputs Generated
-Trained Models
-Plain Text
+```text
 DeepESD_ESD_pseudo_reality_NZ_pr.pt
- 
 DeepESD_ESD_pseudo_reality_NZ_tasmax.pt
- 
 DeepESD_Emulator_hist_future_NZ_pr.pt
- 
 DeepESD_Emulator_hist_future_NZ_tasmax.pt
-Prediction Outputs
-Plain Text
-Predictions_pr_tasmax_*.nc
-Submission Package
-Plain Text
+```
+
+---
+
+### Submission
+
+Scripts:
+
+```text
+submission.py
+submission_nz.slurm
+submission_nz_gpu.slurm
+submission_nz_gpu_nvme.slurm
+```
+
+Generated outputs:
+
+```text
+Prediction NetCDF files
 emulator_id.zip
-Evaluation Results
-Plain Text
+```
+
+---
+
+### Evaluation
+
+Scripts:
+
+```text
+evaluate_nz.py
+evaluate_nz_extended.py
+```
+
+Generated outputs:
+
+```text
 nz_benchmark_summary.csv
-Reproducibility Issues Identified
+nz_benchmark_summary_climate_extended.csv
+```
 
-During workflow validation, several issues affecting portability and reproducibility were identified and resolved.
+---
 
-Hardcoded Data Paths
+## Validation Results
 
-Several scripts referenced absolute dataset locations tied to a specific user environment. Manual updates were required before workflow execution.
+| Workflow | Status |
+|-----------|----------|
+| CPU Training | PASS |
+| GPU Training | PASS |
+| CPU Submission | PASS |
+| GPU Submission | PASS |
+| GPU + NVMe Submission | PASS |
+| Evaluation Workflow | PASS |
 
-Hardcoded Model Paths
+---
 
-Model save and load locations were embedded directly within workflow scripts, reducing portability across systems.
+## Performance Comparison
 
-Hardcoded Output Paths
+| Workflow | Runtime |
+|-----------|----------|
+| CPU Training | 4m 54s |
+| GPU Training | ~7s |
+| CPU Submission | 18m 56s |
+| GPU Submission | 13m 34s |
+| GPU + NVMe Submission | 11m 41s |
 
-Output directories were predefined within scripts and required modification for execution on Setonix.
+### Observation
 
-Hardcoded Environment Activation Paths
+GPU execution reduced runtime significantly compared with CPU execution.
 
-Environment setup commands referenced user-specific locations and needed adjustment for independent deployment.
+The GPU + NVMe workflow provided the fastest submission execution due to local NVMe staging and reduced filesystem overhead.
 
-PyTorch Version Mismatch
+---
 
-The workflow required a compatible PyTorch version that differed from the initially loaded module.
+## Experimental Climate Diagnostics
 
-Missing Template Dependency
+The original benchmark summary includes:
 
-Required template files referenced by the submission workflow were not available in the expected location.
+```text
+RMSE
+Mean Bias
+TXx Bias
+RX1day Bias
+SDII Bias
+```
 
-Missing Python Dependency
+An experimental evaluation workflow was developed to investigate additional climate diagnostics already implemented within `indices.py`.
 
-The Python package tqdm was missing from the environment and required installation prior to execution.
+Additional diagnostics evaluated:
 
-Validation Summary
+| Metric | Description |
+|----------|----------|
+| CDD | Consecutive Dry Days |
+| CWD | Consecutive Wet Days |
+| SU | Summer Days |
 
-The complete NZ CORDEX ML-Bench workflow was successfully reproduced and validated on Setonix.
+### Purpose
 
-Workflow Component	Status
-CPU Training	PASS
-GPU Training	PASS
-CPU Submission	PASS
-GPU Submission	PASS
-GPU + NVMe Submission	PASS
-Evaluation	PASS
+These metrics provide additional information regarding:
 
-All execution pathways completed successfully and produced the expected outputs without modification to the scientific workflow logic.
+- Dry spell characteristics
+- Wet spell persistence
+- Frequency of hot days
 
-Key Achievements
-Successfully reproduced the NZ CORDEX ML-Bench workflow on Setonix.
-Validated CPU training and submission workflows.
-Validated GPU training and submission workflows.
-Validated GPU + NVMe execution workflows.
-Generated benchmark prediction outputs.
-Produced benchmark submission packages.
-Successfully completed benchmark evaluation.
-Identified and documented reproducibility limitations.
-Resolved dependency and environment configuration issues.
-Established a repeatable workflow validation process for future users.
-Future Recommendations
+which are important indicators of climate extremes.
 
-To improve workflow portability and reproducibility, the following enhancements are recommended:
+### Extended Evaluation Output
 
-Replace hardcoded paths with configuration files.
-Use environment variables for system-specific settings.
-Document software dependencies and versions explicitly.
-Add automated environment validation checks.
-Consider containerised deployment using Apptainer or Singularity.
-Introduce automated testing for workflow validation.
-Acknowledgements
+The experimental evaluation generates:
 
-This work was completed as part of the Department of Water and Environmental Regulation (DWER), Western Australia Internship Program.
+```text
+nz_benchmark_summary_climate_extended.csv
+```
 
-The original CORDEX ML-Bench workflow was developed and maintained by Jincy Jis Kanichai. This project focused on independently reproducing, validating, testing, and documenting the New Zealand workflow on the Pawsey Setonix supercomputing platform.
+Additional columns:
 
-Special thanks to Jincy Jis Kanichai for providing the original workflow, technical guidance, and support throughout the validation process.
+```text
+cdd_bias
+cwd_bias
+su_bias
+```
 
-Author
+These metrics are provided for investigation and discussion and are not intended to replace the existing benchmark methodology.
+
+---
+
+## Reproducibility Issues Identified
+
+During validation the following issues were encountered:
+
+- Hardcoded data paths
+- Hardcoded model paths
+- Hardcoded environment references
+- Missing workflow dependencies
+- Incorrect module references within GPU workflows
+
+These issues were resolved as part of workflow validation.
+
+---
+
+## Acknowledgements
+
+The original NZ CORDEX ML-Bench workflow, benchmark design and implementation were developed by:
+
+- Jincy Jis Kanichai
+- Omer Mughal
+
+This repository documents independent workflow validation, testing, and exploratory evaluation conducted on Setonix.
+
+---
+
+## Author
 
 Dhanush Gadiraju
 
-Intern Student
+DWER-WA Internship Project
 
-Department of Water and Environmental Regulation (DWER), Western Australia
-
-Project Title:
-
-NZ CORDEX ML-Bench Workflow Reproducibility and Validation on Setonix
-
-Year:
-
-2026
+Setonix Workflow Validation and Reproducibility Testing
