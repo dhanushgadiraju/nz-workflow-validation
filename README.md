@@ -127,7 +127,6 @@ nz_benchmark_summary_climate_extended.csv
 | GPU Training | ~7s |
 | CPU Submission | 18m 56s |
 | GPU Submission | 13m 34s |
-| GPU + NVMe Submission | 11m 41s |
 
 ### Observation
 
